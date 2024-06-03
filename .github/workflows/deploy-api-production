@@ -1,0 +1,52 @@
+name: Deploy API to Production
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "ClimaCloud.WebApi/**"
+      - "ClimaCloud.Core/**"
+      - "ClimaCloud.Shared/**"
+  workflow_dispatch:
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      working_directory: "./ClimaCloud.WebApi"
+      project_name: "ClimaCloud.WebApi.csproj"
+      environment: "production"
+
+  deploy_api:
+    name: Deploy API to Production
+    runs-on: windows-latest
+    needs: build
+
+    environment:
+      name: production
+      url: https://app-climacloud-prod-cus.azurewebsites.net
+
+    concurrency: production-climacloud-api
+
+    env: 
+      AZURE_WEBAPP_NAME: app-climacloud-prod-cus
+      AZURE_WEBAPP_PACKAGE_PATH: "./artifacts"
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: artifacts
+          path: artifacts
+      
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.CLIMA_CLOUD_PROD_PUBLISH_PROFILE }}
+          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
