@@ -12,7 +12,7 @@
                 "https://localhost:7167",
                 "https://localhost:7272",
                 "https://localhost:7199",
-                "https://www.climacloud.co",
+                "https://staging.climacloud.co",
                 "https://www.climacloud.co"
             };
 
