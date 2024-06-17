@@ -1,0 +1,139 @@
+﻿@page "/echarts3d"
+@using System.Net.Http.Json
+@inject IJSRuntime JS
+@inject HttpClient Http
+@inject IConfiguration Configuration
+@implements IDisposable
+
+<div class="container">
+    <h3>Global Clima Devices 3D Bar Chart on Globe</h3>
+    <div class="form-group">
+        <label for="measurements-dropdown">Select Measurement:</label>
+        <select id="measurements-dropdown" class="form-control" @onchange="OnMeasurementChange" disabled="@IsLoading">
+            @foreach (var measurement in Measurements)
+            {
+                <option value="@measurement">@measurement</option>
+            }
+        </select>
+    </div>
+    <br />
+    <div id="chart-container" style="width: 100%; height: 500px; position: relative;">
+        @if (IsLoading)
+        {
+            <div class="spinner-border text-primary" role="status" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                <span class="sr-only">Loading...</span>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<string> Measurements { get; set; } = new();
+    private string CurrentMeasurement { get; set; }
+    private IJSObjectReference? _module;
+    private PeriodicTimer? _timer;
+    private bool IsLoading { get; set; } = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var data = await FetchData();
+        if (data?.Data?.Any() == true)
+        {
+            Measurements = data.Data.First().Measurements.Keys.ToList();
+            CurrentMeasurement = Measurements.First();
+            IsLoading = false;
+            StateHasChanged();
+            await InitializeChart(CurrentMeasurement, data.Data);
+            _timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+            _ = TimerLoop();
+        }
+        else
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task<ApiResponse?> FetchData()
+    {
+        try
+        {
+            return await Http.GetFromJsonAsync<ApiResponse>($"{Configuration.GetValue<string>("ServerApi:BaseAddress")}/api/event/GetAllEvents");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error fetching data: {ex.Message}");
+            return null;
+        }
+    }
+
+    private async Task TimerLoop()
+    {
+        while (await _timer!.WaitForNextTickAsync())
+        {
+            var data = await FetchData();
+            if (data?.Data != null)
+            {
+                await UpdateChartData(CurrentMeasurement, data.Data);
+            }
+        }
+    }
+
+    private async Task InitializeChart(string measurement, List<DataItem> data)
+    {
+        _module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/echarts3d.js");
+        if (_module != null)
+        {
+            await _module.InvokeVoidAsync("initECharts3D", measurement, data);
+        }
+    }
+
+    private async Task UpdateChartData(string measurement, List<DataItem> data)
+    {
+        if (_module != null)
+        {
+            await _module.InvokeVoidAsync("updateEChartsData", measurement, data);
+        }
+    }
+
+    private async Task OnMeasurementChange(ChangeEventArgs e)
+    {
+        CurrentMeasurement = e.Value.ToString();
+        IsLoading = true;
+        StateHasChanged();
+        var data = await FetchData();
+        if (data?.Data != null)
+        {
+            IsLoading = false;
+            await UpdateChartData(CurrentMeasurement, data.Data);
+        }
+        else
+        {
+            IsLoading = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+        _module?.DisposeAsync();
+    }
+
+    public class ApiResponse
+    {
+        public List<DataItem> Data { get; set; }
+        public bool IsSuccessful { get; set; }
+        public string? ErrorMessage { get; set; }
+    }
+
+    public class DataItem
+    {
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public string Description { get; set; }
+        public Dictionary<string, double> Measurements { get; set; }
+        public string Timestamp { get; set; }
+        public string DeviceId { get; set; }
+        public string OrgId { get; set; }
+        public string ReceivedAt { get; set; }
+    }
+}

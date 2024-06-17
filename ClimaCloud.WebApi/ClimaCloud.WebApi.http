@@ -1,0 +1,6 @@
+@ClimaCloud.WebApi_HostAddress = http://localhost:5010
+
+GET {{ClimaCloud.WebApi_HostAddress}}/api/climadevice/
+Accept: application/json
+
+###

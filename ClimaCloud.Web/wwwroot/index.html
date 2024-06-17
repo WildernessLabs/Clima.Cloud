@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ClimaCloud.Web</title>
+    <base href="/" />
+    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link href="ClimaCloud.Web.styles.css" rel="stylesheet" />
+</head>
+
+<body>
+    <app>
+        <div id="app">Loading...</div>
+    </app>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@latest/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts-gl@latest/dist/echarts-gl.min.js"></script>
+    <script type="module" src="js/echarts3d.js?v=@(DateTime.Now.Ticks)"></script>
+    <script src="_framework/blazor.webassembly.js"></script>
+</body>
+
+</html>
