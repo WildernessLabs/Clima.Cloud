@@ -12,7 +12,7 @@
                 parseFloat(dataItem.measurements[measurement]).toFixed(2),
                 dataItem.deviceId
             ];
-        }).concat([[0, 0, 1, '']]);
+        });
     }
 
     var processedData = processData(data, measurement);
@@ -99,7 +99,7 @@ export async function updateEChartsData(measurement, data) {
                 parseFloat(dataItem.measurements[measurement]).toFixed(2),
                 dataItem.deviceId
             ];
-        }).concat([[0, 0, 1, '']]);
+        });
     }
 
     var processedData = processData(data, measurement);
