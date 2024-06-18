@@ -2,13 +2,22 @@
   "routes": [
     {
       "route": "/*",
-      "serve": "/index.html"
+      "serve": "/index.html",
+      "statusCode": 200
     }
   ],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [ "/images/*", "/css/*", "/js/*" ]
+  },
   "mimeTypes": {
     ".dll": "application/octet-stream",
-    ".css": "text/css",
-    ".js": "application/javascript",
     ".wasm": "application/wasm"
+  },
+  "responseOverrides": {
+    "404": {
+      "rewrite": "/index.html",
+      "statusCode": 200
+    }
   }
 }
