@@ -4,6 +4,7 @@ using ClimaCloud.Core.Interfaces;
 using ClimaCloud.Core.Repositories;
 using ClimaCloud.Core.Services;
 using ClimaCloud.WebApi.Helpers;
+using Elasticsearch.Net;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.OpenApi.Models;
 using System.Text.Json;
@@ -24,6 +25,19 @@ namespace ClimaCloud.WebApi
                 options.SerializerOptions.PropertyNamingPolicy = null;
             });
 
+            builder.Services.AddSingleton<IElasticLowLevelClient, ElasticLowLevelClient>(provider =>
+            {
+                // Azure Elasticsearch settings
+                var azureElasticsearchUrl = builder.Configuration.GetValue<string>("Elasticsearch:Url");
+                var azureApiKey = builder.Configuration.GetValue<string>("Elasticsearch:ApiKey");
+
+                // Create a connection configuration
+                var connectionSettings = new ConnectionConfiguration(new Uri(azureElasticsearchUrl))
+                    .ApiKeyAuthentication(new ApiKeyAuthenticationCredentials(azureApiKey));
+
+                // Create and return the ElasticLowLevelClient
+                return new ElasticLowLevelClient(connectionSettings);
+            });
 
             builder.Services.AddSingleton<TableServiceClient>(provider =>
             {

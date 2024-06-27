@@ -1,63 +1,85 @@
-﻿@page "/echarts3d"
+﻿@page "/globe"
 @using System.Net.Http.Json
+@using ClimaCloud.Shared.Messages
 @inject IJSRuntime JS
 @inject HttpClient Http
 @inject IConfiguration Configuration
 @implements IDisposable
 
-<div class="container">
-    <h3>Global Clima Devices 3D Bar Chart on Globe</h3>
-    <div class="form-group">
-        <label for="measurements-dropdown">Select Measurement:</label>
-        <select id="measurements-dropdown" class="form-control" @onchange="OnMeasurementChange" disabled="@IsLoading">
-            @foreach (var measurement in Measurements)
-            {
-                <option value="@measurement">@measurement</option>
-            }
-        </select>
-    </div>
-    <br />
-    <div id="chart-container" style="width: 100%; height: 500px; position: relative;">
+<div class="dashboard-container">
+    <div id="globe-container" class="globe-container @(IsGlobeCollapsed ? "globe-collapsed" : "globe-full-width")" style="width: 100%; height: 500px;">
         @if (IsLoading)
         {
             <div class="spinner-border text-primary" role="status" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
                 <span class="sr-only">Loading...</span>
             </div>
-        }
+        }     
     </div>
+    @if (!string.IsNullOrWhiteSpace(DeviceId) && !string.IsNullOrWhiteSpace(OrgId))
+    {
+        <div class="charts-container">
+            <h2>Org Id:</h2> @(OrgId)<br />
+            <h2>Device Id:</h2> @(DeviceId)<br />
+            <div class="chart-item">
+                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Temperature" />
+            </div>
+            <div class="chart-item">
+                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Humidity" />
+            </div>
+            <div class="chart-item">
+                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Pressure" />
+            </div>
+            <div class="chart-item">
+                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Co2Level" />
+            </div>
+        </div>
+    }
 </div>
 
 @code {
-    private List<string> Measurements { get; set; } = new();
-    private string CurrentMeasurement { get; set; }
     private IJSObjectReference? _module;
     private PeriodicTimer? _timer;
-    private bool IsLoading { get; set; } = true;
+    private bool IsLoading { get; set; } = false;
+    private bool IsGlobeCollapsed { get; set; } = false;
+    private List<ClientEventMessage>? DeviceDataItems;
+    private string? DeviceId;
+    private string? OrgId;
 
     protected override async Task OnInitializedAsync()
     {
+        IsLoading = true;
         var data = await FetchData();
-        if (data?.Data?.Any() == true)
+        IsLoading = false;
+
+        if (data != null)
         {
-            Measurements = data.Data.First().Measurements.Keys.ToList();
-            CurrentMeasurement = Measurements.First();
-            IsLoading = false;
-            StateHasChanged();
-            await InitializeChart(CurrentMeasurement, data.Data);
+            data.Data = data.Data ?? new();
+            await InitializeChart(data.Data);
             _timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
             _ = TimerLoop();
         }
-        else
-        {
-            IsLoading = false;
-        }
+
+        StateHasChanged();
     }
 
-    private async Task<ApiResponse?> FetchData()
+    private async Task<ResponseMessage<List<ClientEventMessage>>?> FetchData()
     {
         try
         {
-            return await Http.GetFromJsonAsync<ApiResponse>($"{Configuration.GetValue<string>("ServerApi:BaseAddress")}/api/event/GetAllEvents");
+            return await Http.GetFromJsonAsync<ResponseMessage<List<ClientEventMessage>>>($"{Configuration["ServerApi:BaseAddress"]}/api/event/GetAllEvents");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error fetching data: {ex.Message}");
+            return null;
+        }
+    }
+
+    private async Task<ResponseMessage<List<ClientEventMessage>>?> FetchDeviceData(string orgId, string deviceId)
+    {
+        try
+        {
+            return await Http.GetFromJsonAsync<ResponseMessage<List<ClientEventMessage>>>($"{Configuration["ServerApi:BaseAddress"]}/api/event/GetAllEventsByDevice?orgId={orgId}&deviceId={deviceId}");
         }
         catch (Exception ex)
         {
@@ -73,67 +95,66 @@
             var data = await FetchData();
             if (data?.Data != null)
             {
-                await UpdateChartData(CurrentMeasurement, data.Data);
+                await UpdateChartData(data.Data);
             }
         }
     }
 
-    private async Task InitializeChart(string measurement, List<DataItem> data)
+    private async Task InitializeChart(List<ClientEventMessage> data)
     {
-        _module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/echarts3d.js");
+        _module = await JS.InvokeAsync<IJSObjectReference>("import", $"./js/echarts-globe.js?v={DateTime.Now.Ticks}");
         if (_module != null)
         {
-            await _module.InvokeVoidAsync("initECharts3D", measurement, data);
+            await _module.InvokeVoidAsync("disposeEChartsGlobe");
+            await _module.InvokeVoidAsync("initEChartsGlobe", DotNetObjectReference.Create(this), data);
+
+            await Task.Delay(1000);
         }
     }
 
-    private async Task UpdateChartData(string measurement, List<DataItem> data)
+    private async Task UpdateChartData(List<ClientEventMessage> data)
     {
         if (_module != null)
         {
-            await _module.InvokeVoidAsync("updateEChartsData", measurement, data);
+            if (!string.IsNullOrWhiteSpace(OrgId) && !string.IsNullOrWhiteSpace(DeviceId))
+            {
+                var deviceData = await FetchDeviceData(OrgId, DeviceId);
+                DeviceDataItems = deviceData?.Data;
+            }
+
+            await _module.InvokeVoidAsync("updateEChartsData", data);
+            StateHasChanged();
         }
     }
 
-    private async Task OnMeasurementChange(ChangeEventArgs e)
+    [JSInvokable]
+    public async Task OnChartClick(string orgId, string deviceId, double longitude, double latitude)
     {
-        CurrentMeasurement = e.Value.ToString();
-        IsLoading = true;
-        StateHasChanged();
-        var data = await FetchData();
-        if (data?.Data != null)
+        if (_module != null)
         {
-            IsLoading = false;
-            await UpdateChartData(CurrentMeasurement, data.Data);
+            var data = await FetchDeviceData(orgId, deviceId);
+
+            IsGlobeCollapsed = true;
+            await _module.InvokeVoidAsync("resizeGlobe", "50%");
+
+            OrgId = orgId;
+            DeviceId = deviceId;
+
+            DeviceDataItems = data?.Data;
+
+            StateHasChanged();
         }
-        else
-        {
-            IsLoading = false;
-        }
+    }
+
+    private void ToggleGlobeSize()
+    {
+        IsGlobeCollapsed = !IsGlobeCollapsed;
     }
 
     public void Dispose()
     {
         _timer?.Dispose();
         _module?.DisposeAsync();
-    }
-
-    public class ApiResponse
-    {
-        public List<DataItem> Data { get; set; }
-        public bool IsSuccessful { get; set; }
-        public string? ErrorMessage { get; set; }
-    }
-
-    public class DataItem
-    {
-        public double Latitude { get; set; }
-        public double Longitude { get; set; }
-        public string Description { get; set; }
-        public Dictionary<string, double> Measurements { get; set; }
-        public string Timestamp { get; set; }
-        public string DeviceId { get; set; }
-        public string OrgId { get; set; }
-        public string ReceivedAt { get; set; }
+        JS.InvokeVoidAsync("disposeEChartsGlobe");
     }
 }

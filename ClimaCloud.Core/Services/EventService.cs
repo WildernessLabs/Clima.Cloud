@@ -1,12 +1,16 @@
 ﻿using ClimaCloud.Core.Entities;
 using ClimaCloud.Core.Interfaces;
 using ClimaCloud.Shared.Messages;
+using Elasticsearch.Net;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Net.Http.Json;
 using System.Text.Json;
 
 namespace ClimaCloud.Core.Services
 {
-    public class EventService(IEventRepository eventRepository, ILogger<EventService> logger) : IEventService
+    public class EventService(IEventRepository eventRepository, ILogger<EventService> logger, IElasticLowLevelClient elasticsearchClient, IConfiguration configuration) : IEventService
     {
         public async Task<ResponseMessage<List<ClientEventMessage>>> GetAllEventsAsync()
         {
@@ -139,6 +143,92 @@ namespace ClimaCloud.Core.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error on EventService.SaveEventAsync");
+
+                response.ErrorMessage = ex.Message;
+                response.IsSuccessful = false;
+            }
+
+            return response;
+        }
+
+        public async Task<ResponseMessage<List<BaseEventMessage>>> GetAllEventsByDeviceAsync(string orgId, string deviceId)
+        {
+            var response = new ResponseMessage<List<BaseEventMessage>>();
+
+            try
+            {
+                var queryFilters = new Dictionary<string, List<string>>();
+
+                queryFilters.Add("orgId", new List<string> { orgId });
+
+                queryFilters.Add("deviceId.keyword", new List<string> { deviceId });
+
+                var query = new
+                {
+                    query = new
+                    {
+                        @bool = new
+                        {
+                            filter = queryFilters?.Select(term => new
+                            {
+                                terms = new Dictionary<string, List<string>>
+                                        {
+                                            { term.Key, term.Value }
+                                        }
+                            })
+                        }
+                    },
+                    sort = new object[]
+                    {
+                    new
+                    {
+                        timestamp = new
+                        {
+                            order = "desc"
+                        }
+                    }
+                    }
+                };
+
+                var searchResponse = await elasticsearchClient.SearchAsync<StringResponse>(configuration["Elasticsearch:Event-Index"], PostData.Serializable(query));
+
+                if (searchResponse?.Success == true)
+                {
+                    using (JsonDocument document = JsonDocument.Parse(searchResponse.Body))
+                    {
+                        var hits = document.RootElement.GetProperty("hits").GetProperty("hits");
+                        response.Data = new List<BaseEventMessage>();
+                        var options = new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        };
+
+                        foreach (JsonElement hit in hits.EnumerateArray())
+                        {
+                            var id = hit.GetProperty("_id").GetString();
+                            var record = hit.GetProperty("_source").Clone();
+                            var @event = JsonSerializer.Deserialize<BaseEventMessage>(record.GetRawText(), options);
+
+                            if (@event != null)
+                            {
+                                response.Data.Add(@event);
+                            }
+                        }
+                    }
+
+                    response.IsSuccessful = true;
+                }
+                else
+                {
+                    logger.LogError($"Error querying Elasticsearch: {searchResponse?.Body}");
+
+                    response.IsSuccessful = false;
+                    response.ErrorMessage = $"Failed to search documents: {searchResponse?.Body}";
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error on EventService.GetAllEventsByDeviceAsync");
 
                 response.ErrorMessage = ex.Message;
                 response.IsSuccessful = false;

@@ -42,5 +42,19 @@ namespace ClimaCloud.WebApi.Controllers
 
             return Ok(deviceEventResponseMessage);
         }
+
+        [Route("GetAllEventsByDevice")]
+        [HttpGet]
+        public async Task<IActionResult> GetAllEventsByDevice(string orgId, string deviceId)
+        {
+            var deviceEventResponseMessage = await _eventService.GetAllEventsByDeviceAsync(orgId, deviceId);
+
+            if (deviceEventResponseMessage?.IsSuccessful == false)
+            {
+                return BadRequest(deviceEventResponseMessage);
+            }
+
+            return Ok(deviceEventResponseMessage);
+        }
     }
 }

@@ -6,5 +6,6 @@ namespace ClimaCloud.Core.Interfaces
     {
         Task<ResponseMessage<List<ClientEventMessage>>> GetAllEventsAsync();
         Task<ResponseMessage<EventMessage?>> SaveEventAsync(EventMessage deviceEventMessage);
+        Task<ResponseMessage<List<BaseEventMessage>>> GetAllEventsByDeviceAsync(string orgId, string deviceId);
     }
 }

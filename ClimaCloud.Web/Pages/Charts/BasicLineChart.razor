@@ -1,0 +1,32 @@
+﻿@using System.Text.Json
+@using ClimaCloud.Shared.Messages
+@inject IJSRuntime JS
+
+<div id="@($"echart-{MeasurementProperty}")" style="width: 100%; height: 400px;"></div>
+
+@code {
+    [Parameter]
+    public List<ClientEventMessage> DataItems { get; set; }
+
+    [Parameter]
+    public string MeasurementProperty { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await RenderChart();
+    }
+
+    private async Task RenderChart()
+    {
+        var data = DataItems.Select(item => new
+        {
+            x = item.ReceivedAt,
+            y = item.Measurements.ContainsKey(MeasurementProperty) ? item.Measurements[MeasurementProperty] : 0
+        }).ToList();
+
+        var json = JsonSerializer.Serialize(data);
+
+        var module = await JS.InvokeAsync<IJSObjectReference>("import", $"./js/echarts-basiclinechart.js");
+        await module.InvokeVoidAsync("renderEChart", $"echart-{MeasurementProperty}", json, MeasurementProperty);
+    }
+}
