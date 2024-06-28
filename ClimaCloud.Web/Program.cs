@@ -10,15 +10,15 @@ namespace ClimaCloud.Web
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-            if (!builder.HostEnvironment.IsDevelopment())
+            if (!builder.HostEnvironment.BaseAddress.Contains("localhost"))
             {
                 // Add support for reading the configuration
-                string environment = builder.HostEnvironment.Environment.ToLowerInvariant();
-                Console.WriteLine(environment);
-
                 var httpClient = new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
                 try
                 {
+                    var environment = builder.HostEnvironment.BaseAddress.Contains("staging") ? "staging" : "production";
+                    Console.WriteLine("Environment:" + environment);
+
                     var response = await httpClient.GetAsync($"appsettings.{environment}.json");
 
                     Console.WriteLine("StatusCode:" + response.StatusCode);
@@ -26,6 +26,8 @@ namespace ClimaCloud.Web
                     {
                         var jsonContent = await response.Content.ReadAsStringAsync();
                         builder.Configuration.AddJsonStream(new MemoryStream(Encoding.UTF8.GetBytes(jsonContent)));
+
+                        Console.WriteLine("Server.BaseAddress:" + builder.Configuration["ServerApi:BaseAddress"]);
                     }
                 }
                 catch (Exception ex)
