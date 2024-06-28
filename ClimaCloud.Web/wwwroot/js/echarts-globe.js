@@ -72,9 +72,9 @@ function getChartOption(processedData) {
                 main: { intensity: 2 }
             },
             viewControl: {
-                autoRotate: false,
-                autoRotateSpeed: 10,
-                autoRotateAfterStill: 5,
+                autoRotate: true,
+                autoRotateSpeed: 5,
+                autoRotateAfterStill: 15,
                 distance: 200
             }
         },
