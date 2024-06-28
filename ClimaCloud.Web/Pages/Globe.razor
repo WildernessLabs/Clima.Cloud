@@ -67,7 +67,7 @@
     {
         try
         {
-            return await Http.GetFromJsonAsync<ResponseMessage<List<ClientEventMessage>>>($"{Configuration["ServerApi:BaseAddress"]}/api/event/GetAllEvents");
+            return await Http.GetFromJsonAsync<ResponseMessage<List<ClientEventMessage>>>($"{Configuration["ServerApi:BaseAddress"]}/events/GetAllEvents");
         }
         catch (Exception ex)
         {
@@ -80,7 +80,7 @@
     {
         try
         {
-            return await Http.GetFromJsonAsync<ResponseMessage<List<ClientEventMessage>>>($"{Configuration["ServerApi:BaseAddress"]}/api/event/GetAllEventsByDevice?orgId={orgId}&deviceId={deviceId}");
+            return await Http.GetFromJsonAsync<ResponseMessage<List<ClientEventMessage>>>($"{Configuration["ServerApi:BaseAddress"]}/events/GetAllEventsByDevice?orgId={orgId}&deviceId={deviceId}");
         }
         catch (Exception ex)
         {

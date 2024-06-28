@@ -5,17 +5,16 @@ using Microsoft.AspNetCore.Mvc;
 namespace ClimaCloud.WebApi.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
-    public class EventController : ControllerBase
+    [Route("[controller]")]
+    public class EventsController : ControllerBase
     {
         private readonly IEventService _eventService;
 
-        public EventController(IEventService eventService)
+        public EventsController(IEventService eventService)
         {
             _eventService = eventService;
         }
 
-        [Route("SaveEvent")]
         [HttpPost]
         public async Task<IActionResult> SaveEvent(EventMessage eventMessage)
         {
