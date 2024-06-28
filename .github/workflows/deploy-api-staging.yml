@@ -34,7 +34,7 @@ jobs:
     concurrency: staging-climacloud-api
 
     env: 
-      AZURE_WEBAPP_NAME: appins-climacloud-stg-cus
+      AZURE_WEBAPP_NAME: app-climacloud-stg-cus
       AZURE_WEBAPP_PACKAGE_PATH: "./artifacts"
 
     steps:
