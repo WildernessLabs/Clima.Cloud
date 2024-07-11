@@ -136,9 +136,9 @@ export async function resizeGlobe(value) {
         var globeWidth = parseFloat(globeContainer.style.width);
         var chartWidth = 100 - globeWidth;
 
-        if (globeWidth > value) {
-            globeWidth -= 0.1;
-            chartWidth += 0.1
+        if (globeWidth > value + 1) {
+            globeWidth -= (globeWidth - value) / 3;
+            chartWidth = 100 - globeWidth;
             globeContainer.style.width = globeWidth + '%';
             chartsContainer.style.width = chartWidth + '%';
             window.myChart.resize();
