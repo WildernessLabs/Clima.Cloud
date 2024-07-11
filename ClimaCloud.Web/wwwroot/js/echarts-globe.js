@@ -1,6 +1,8 @@
 ﻿const zIndexHeight = 1;
 
+var _dotNetHelper;
 export async function initEChartsGlobe(dotNetHelper, data) {
+    _dotNetHelper = dotNetHelper;
     var chartDom = document.getElementById('globe-container');
     if (!chartDom) {
         console.error('Chart container element not found');
@@ -17,7 +19,7 @@ export async function initEChartsGlobe(dotNetHelper, data) {
 
     myChart.on('click', function (params) {
         if (params.seriesType === 'scatter3D') {
-            dotNetHelper.invokeMethodAsync('OnChartClick', params.value[4], params.value[3], params.value[0], params.value[1]);
+            _dotNetHelper.invokeMethodAsync('OnChartClick', params.value[4], params.value[3], params.value[0], params.value[1]);
         }
     });
 }
@@ -86,9 +88,7 @@ function getChartOption(processedData) {
                 main: { intensity: 3 }
             },
             viewControl: {
-                autoRotate: true,
-                autoRotateSpeed: 5,
-                autoRotateAfterStill: 20000,
+                autoRotate: false,
                 distance: 200
             }
         },
@@ -107,7 +107,7 @@ function getChartOption(processedData) {
             }),
             minHeight: 0,
             silent: false,
-            symbolSize: 30,
+            symbolSize: 15,
         }]
     };
 }
@@ -126,11 +126,33 @@ function getColorForDevice(deviceId) {
 
 export async function setWidth(value) {
     window.myChart.option.graphic.elements[0].shape.width = value;
-    window.myChart.setOption(window.myChart.getOption()); // Apply changes
+    window.myChart.setOption(window.myChart.getOption());
 }
 
 export async function resizeGlobe(value) {
     var globeContainer = document.getElementById('globe-container');
-    globeContainer.style.width = value;
-    window.myChart.resize();
+    var chartsContainer = document.getElementById('charts-container');
+    function animate() {
+        var globeWidth = parseFloat(globeContainer.style.width);
+        var chartWidth = 100 - globeWidth;
+
+        if (globeWidth > value) {
+            globeWidth -= 0.1;
+            chartWidth += 0.1
+            globeContainer.style.width = globeWidth + '%';
+            chartsContainer.style.width = chartWidth + '%';
+            window.myChart.resize();
+            requestAnimationFrame(animate);
+        } else {
+            globeContainer.style.width = value + '%';
+            chartsContainer.style.width = value + '%';
+            window.myChart.resize();
+            _dotNetHelper.invokeMethodAsync('AnimationComplete');
+        }
+    }
+
+    requestAnimationFrame(animate);
+    
+    // globeContainer.style.width = value;
+    // window.myChart.resize();
 }

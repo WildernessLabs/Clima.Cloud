@@ -14,11 +14,12 @@
             <div class="spinner-border text-primary" role="status" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
                 <span class="sr-only">Loading...</span>
             </div>
-        }     
+        }
     </div>
-    @if (!string.IsNullOrWhiteSpace(DeviceId) && !string.IsNullOrWhiteSpace(OrgId))
-    {
-        <div class="charts-container">
+
+    <div id="charts-container" class="charts-container">
+        @if (IsGlobeCollapsed)
+        {
             <div class="chart-item">
                 <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Temperature"/>
             </div>
@@ -31,10 +32,12 @@
             <div class="chart-item">
                 <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Co2Level"/>
             </div>
-            <div>Org Id:</div> @(OrgId)<br/>
-            <div>Device Id:</div> @(DeviceId)<br/>
-        </div>
-    }
+            <div>Org Id:</div>
+            @(OrgId)<br/>
+            <div>Device Id:</div>
+            @(DeviceId)<br/>
+        }
+    </div>
 </div>
 
 @code {
@@ -42,6 +45,7 @@
     private PeriodicTimer? _timer;
     private bool IsLoading { get; set; } = false;
     private bool IsGlobeCollapsed { get; set; } = false;
+    private bool IsAnimationComplete { get; set; } = false;
     private List<ClientEventMessage>? DeviceDataItems;
     private string? DeviceId;
     private string? OrgId;
@@ -134,9 +138,9 @@
         if (_module != null)
         {
             var data = await FetchDeviceData(orgId, deviceId);
-
+            
+            if (!IsGlobeCollapsed) await _module.InvokeVoidAsync("resizeGlobe", 50);
             IsGlobeCollapsed = true;
-            await _module.InvokeVoidAsync("resizeGlobe", "50%");
 
             OrgId = orgId;
             DeviceId = deviceId;
@@ -147,9 +151,10 @@
         }
     }
 
-    private void ToggleGlobeSize()
+    [JSInvokable]
+    public async Task AnimationComplete()
     {
-        IsGlobeCollapsed = !IsGlobeCollapsed;
+        IsAnimationComplete = true;
     }
 
     public void Dispose()
@@ -158,4 +163,5 @@
         _module?.DisposeAsync();
         JS.InvokeVoidAsync("disposeEChartsGlobe");
     }
+
 }

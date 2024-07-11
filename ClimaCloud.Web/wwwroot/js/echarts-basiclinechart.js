@@ -2,7 +2,7 @@
 
 export async function renderEChart(elementId, dataJson, measurementProperty) {
     const data = JSON.parse(dataJson);
-
+    console.log('h')
     echarts.registerTheme('wl-dark', echartsTheme);
     const chart = echarts.init(document.getElementById(elementId), 'wl-dark');
 
@@ -48,6 +48,14 @@ export async function renderEChart(elementId, dataJson, measurementProperty) {
     };
 
     chart.setOption(option);
+    
+    const resize = () => {
+        if(chart) chart.resize();
+        requestAnimationFrame(resize);
+        console.log('h');
+    }
+    requestAnimationFrame(resize);
+    
 }
 
 function formatDate(date) {
