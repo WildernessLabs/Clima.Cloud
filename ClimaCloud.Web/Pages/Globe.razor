@@ -18,6 +18,8 @@
     </div>
 
     <div id="charts-container" class="charts-container">
+        <h2>Clima Statistics</h2>
+        <div></div>
         @if (IsGlobeCollapsed)
         {
             <div class="chart-item">
@@ -32,10 +34,10 @@
             <div class="chart-item">
                 <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Co2Level"/>
             </div>
-            <div>Org Id:</div>
-            @(OrgId)<br/>
-            <div>Device Id:</div>
-            @(DeviceId)<br/>
+            <div class="ids">
+                <div>Org Id: @(OrgId) </div>
+                <div>Device Id: @(DeviceId)</div>
+            </div>
         }
     </div>
 </div>

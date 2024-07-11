@@ -1,5 +1,4 @@
 ﻿const zIndexHeight = 1;
-
 var _dotNetHelper;
 export async function initEChartsGlobe(dotNetHelper, data) {
     _dotNetHelper = dotNetHelper;
@@ -68,7 +67,7 @@ function processData(data) {
 
 function getChartOption(processedData) {
     return {
-        backgroundColor: '#000',
+        backgroundColor: '#07161d',
         tooltip: {
             show: true,
             trigger: 'item',
@@ -83,7 +82,7 @@ function getChartOption(processedData) {
                 roughness: 0.8,
                 metalness: 0
             },
-            environment: '/asset/starfield.jpg',
+            // environment: '/asset/starfield.jpg',
             light: {
                 main: { intensity: 3 }
             },
@@ -100,14 +99,14 @@ function getChartOption(processedData) {
                 return {
                     value: dataItem,
                     itemStyle: {
-                        color: getColorForDevice(dataItem[3]),
+                        color: "pink",
                         opacity: isLastPoint ? 0 : 1
                     },
                 };
             }),
             minHeight: 0,
             silent: false,
-            symbolSize: 15,
+            symbolSize: 20,
         }]
     };
 }

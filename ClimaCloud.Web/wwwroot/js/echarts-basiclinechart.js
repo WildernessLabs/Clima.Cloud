@@ -1,14 +1,16 @@
 ﻿import {echartsTheme} from "./config/echarts-theme.js";
-
 export async function renderEChart(elementId, dataJson, measurementProperty) {
     const data = JSON.parse(dataJson);
-    console.log('h')
     echarts.registerTheme('wl-dark', echartsTheme);
-    const chart = echarts.init(document.getElementById(elementId), 'wl-dark');
+    const container = document.getElementById(elementId);
+    const chart = echarts.init(container, 'wl-dark');
 
     const option = {
         title: {
-            text: `${measurementProperty}`
+            text: `${measurementProperty}`,
+            textStyle: {
+                color: '#ffffff'
+            }
         },
         tooltip: {
             trigger: 'axis',
@@ -43,16 +45,17 @@ export async function renderEChart(elementId, dataJson, measurementProperty) {
         series: [{
             name: measurementProperty,
             data: data.map(item => [item.x, item.y]),
-            type: 'line'
+            type: 'line',
         }]
     };
 
     chart.setOption(option);
     
+    var lastWidth = container.offsetWidth;
     const resize = () => {
         if(chart) chart.resize();
-        requestAnimationFrame(resize);
-        console.log('h');
+        if(container.offsetWidth !== lastWidth) requestAnimationFrame(resize);
+        lastWidth = container.offsetWidth;
     }
     requestAnimationFrame(resize);
     
