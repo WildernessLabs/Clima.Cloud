@@ -39,11 +39,9 @@ code {
     display: grid;
     grid-template-columns: 1fr 2fr;
     gap: 20px;
-    padding: 20px;
 }
 
 .globe-container {
-    background-color: #f0f0f0; /* Placeholder style */
     height: 100%;
     width: 100%;
 }
@@ -52,13 +50,10 @@ code {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
+    margin-top: 50px;
 }
 
 .chart-item {
-    background-color: #ffffff; /* Placeholder style */
-    border: 1px solid #ddd;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .globe-full-width {

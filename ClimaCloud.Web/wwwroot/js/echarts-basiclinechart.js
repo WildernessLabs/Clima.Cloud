@@ -1,7 +1,10 @@
-﻿export async function renderEChart(elementId, dataJson, measurementProperty) {
+﻿import {echartsTheme} from "./config/echarts-theme.js";
+
+export async function renderEChart(elementId, dataJson, measurementProperty) {
     const data = JSON.parse(dataJson);
 
-    const chart = echarts.init(document.getElementById(elementId));
+    echarts.registerTheme('wl-dark', echartsTheme);
+    const chart = echarts.init(document.getElementById(elementId), 'wl-dark');
 
     const option = {
         title: {

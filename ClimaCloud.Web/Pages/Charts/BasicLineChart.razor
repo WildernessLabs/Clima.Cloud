@@ -26,7 +26,8 @@
 
         var json = JsonSerializer.Serialize(data);
 
-        var module = await JS.InvokeAsync<IJSObjectReference>("import", $"./js/echarts-basiclinechart.js");
+        var module = await JS.InvokeAsync<IJSObjectReference>("import", $"./js/config/echarts-theme.js");
+        module = await JS.InvokeAsync<IJSObjectReference>("import", $"./js/echarts-basiclinechart.js");
         await module.InvokeVoidAsync("renderEChart", $"echart-{MeasurementProperty}", json, MeasurementProperty);
     }
 }
