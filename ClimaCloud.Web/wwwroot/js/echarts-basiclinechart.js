@@ -1,11 +1,16 @@
-﻿export async function renderEChart(elementId, dataJson, measurementProperty) {
+﻿import {echartsTheme} from "./config/echarts-theme.js";
+export async function renderEChart(elementId, dataJson, measurementProperty) {
     const data = JSON.parse(dataJson);
-
-    const chart = echarts.init(document.getElementById(elementId));
+    echarts.registerTheme('wl-dark', echartsTheme);
+    const container = document.getElementById(elementId);
+    const chart = echarts.init(container, 'wl-dark');
 
     const option = {
         title: {
-            text: `${measurementProperty}`
+            text: `${measurementProperty}`,
+            textStyle: {
+                color: '#ffffff'
+            }
         },
         tooltip: {
             trigger: 'axis',
@@ -40,11 +45,20 @@
         series: [{
             name: measurementProperty,
             data: data.map(item => [item.x, item.y]),
-            type: 'line'
+            type: 'line',
         }]
     };
 
     chart.setOption(option);
+    
+    var lastWidth = container.offsetWidth;
+    const resize = () => {
+        if(chart) chart.resize();
+        if(container.offsetWidth !== lastWidth) requestAnimationFrame(resize);
+        lastWidth = container.offsetWidth;
+    }
+    requestAnimationFrame(resize);
+    
 }
 
 function formatDate(date) {

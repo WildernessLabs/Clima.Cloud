@@ -1,5 +1,7 @@
-﻿export async function initEChartsGlobe(dotNetHelper, data) {
-    var zIndexHeight = 1;
+﻿const zIndexHeight = 1;
+var _dotNetHelper;
+export async function initEChartsGlobe(dotNetHelper, data) {
+    _dotNetHelper = dotNetHelper;
     var chartDom = document.getElementById('globe-container');
     if (!chartDom) {
         console.error('Chart container element not found');
@@ -8,32 +10,38 @@
     var myChart = echarts.init(chartDom);
     window.myChart = myChart;
 
-    var processedData = processData(data, zIndexHeight);
+    var processedData = processData(data);
 
     var option = getChartOption(processedData);
 
     myChart.setOption(option);
 
     myChart.on('click', function (params) {
-        dotNetHelper.invokeMethodAsync('OnChartClick', params.value[4], params.value[3], params.value[0], params.value[1]);
+        if (params.seriesType === 'scatter3D') {
+            _dotNetHelper.invokeMethodAsync('OnChartClick', params.value[4], params.value[3], params.value[0], params.value[1]);
+        }
     });
 }
 
 export async function updateEChartsData(data) {
-    var zIndexHeight = 5;
     if (!window.myChart) {
         console.error('Chart is not initialized');
         return;
     }
 
-    var processedData = processData(data, zIndexHeight);
-
+    var processedData = processData(data);
     window.myChart.setOption({
         series: [{
-            data: processedData.map(dataItem => ({
-                value: dataItem,
-                itemStyle: { color: getColorForDevice(dataItem[3]) }
-            }))
+            data: processedData.map((dataItem, index) => {
+                const isLastPoint = index > processedData.length - 2;
+                return {
+                    value: dataItem,
+                    itemStyle: {
+                        color: getColorForDevice(dataItem[3]),
+                        opacity: isLastPoint ? 0 : 1
+                    },
+                };
+            })
         }]
     });
 }
@@ -45,60 +53,60 @@ export function disposeEChartsGlobe() {
     }
 }
 
-function processData(data, zIndexHeight) {
-    return data.map(dataItem => [
+function processData(data) {
+    data = data.map(dataItem => [
         dataItem.longitude,
         dataItem.latitude,
         zIndexHeight,
         dataItem.deviceId,
         dataItem.orgId
     ]);
+    data.push([0, 0, 999, 'fake', 'fake']);
+    return data;
 }
 
 function getChartOption(processedData) {
     return {
-        backgroundColor: '#000',
+        backgroundColor: '#07161d',
         tooltip: {
             show: true,
-            formatter: params => `Org ID: ${params.value[4]}<br /> Device ID: ${params.value[3]}<br />
+            trigger: 'item',
+            formatter: params => `Org ID: ${params.value[4]}<br />Device ID: ${params.value[3]}<br />
                                   Coordinates: (${params.value[1]}, ${params.value[0]})`
         },
         globe: {
             baseTexture: '/asset/world.topo.bathy.200401.jpg',
             heightTexture: '/asset/world.topo.bathy.200401.jpg',
-            shading: 'lambert',
-            environment: '/asset/starfield.jpg',
+            shading: 'realistic',
+            realisticMaterial: {
+                roughness: 0.8,
+                metalness: 0
+            },
+            // environment: '/asset/starfield.jpg',
             light: {
-                main: { intensity: 2 }
+                main: { intensity: 3 }
             },
             viewControl: {
-                autoRotate: true,
-                autoRotateSpeed: 5,
-                autoRotateAfterStill: 15,
+                autoRotate: false,
                 distance: 200
             }
         },
         series: [{
-            type: 'bar3D',
+            type: 'scatter3D',
             coordinateSystem: 'globe',
-            data: processedData.map(dataItem => ({
-                value: dataItem,
-                itemStyle: { color: getColorForDevice(dataItem[3]) },
-                emphasis: { itemStyle: { color: getColorForDevice(dataItem[3]) } }
-            })),
-            barSize: 1,
-            minHeight: 0.2,
+            data: processedData.map((dataItem, index) => {
+                const isLastPoint = index > processedData.length - 2;
+                return {
+                    value: dataItem,
+                    itemStyle: {
+                        color: "pink",
+                        opacity: isLastPoint ? 0 : 1
+                    },
+                };
+            }),
+            minHeight: 0,
             silent: false,
-            //label: {
-            //    show: true,
-            //    formatter: params => params.value[2],
-            //    position: 'top',
-            //    distance: 10,
-            //    textStyle: {
-            //        color: '#fff',
-            //        fontSize: 12
-            //    }
-            //}
+            symbolSize: 20,
         }]
     };
 }
@@ -117,15 +125,32 @@ function getColorForDevice(deviceId) {
 
 export async function setWidth(value) {
     window.myChart.option.graphic.elements[0].shape.width = value;
-    myChart.setOption(option);
+    window.myChart.setOption(window.myChart.getOption());
 }
 
 export async function resizeGlobe(value) {
     var globeContainer = document.getElementById('globe-container');
-    // Example of changing the width dynamically
-    globeContainer.style.width = value;
-    //globeContainer.style.height = '600px'; // Adjust height if necessary
+    var chartsContainer = document.getElementById('charts-container');
+    function animate() {
+        var globeWidth = parseFloat(globeContainer.style.width);
+        var chartWidth = 100 - globeWidth;
 
-    // Resize the ECharts instance
-    window.myChart.resize();
+        if (globeWidth > value + 1) {
+            globeWidth -= (globeWidth - value) / 3;
+            chartWidth = 100 - globeWidth;
+            globeContainer.style.width = globeWidth + '%';
+            chartsContainer.style.width = chartWidth + '%';
+            window.myChart.resize();
+            requestAnimationFrame(animate);
+        } else {
+            globeContainer.style.width = value + '%';
+            chartsContainer.style.width = value + '%';
+            window.myChart.resize();
+        }
+    }
+
+    requestAnimationFrame(animate);
+    
+    // globeContainer.style.width = value;
+    // window.myChart.resize();
 }

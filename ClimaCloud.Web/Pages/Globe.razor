@@ -8,33 +8,38 @@
 @implements IDisposable
 
 <div class="dashboard-container">
-    <div id="globe-container" class="globe-container @(IsGlobeCollapsed ? "globe-collapsed" : "globe-full-width")" style="width: 100%; height: 500px;">
+    <div id="globe-container" class="globe-container @(IsGlobeCollapsed ? "globe-collapsed" : "globe-full-width")" style="width: 100%; height: 100vh;">
         @if (IsLoading)
         {
             <div class="spinner-border text-primary" role="status" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
                 <span class="sr-only">Loading...</span>
             </div>
-        }     
+        }
     </div>
-    @if (!string.IsNullOrWhiteSpace(DeviceId) && !string.IsNullOrWhiteSpace(OrgId))
-    {
-        <div class="charts-container">
-            <h2>Org Id:</h2> @(OrgId)<br />
-            <h2>Device Id:</h2> @(DeviceId)<br />
+
+    <div id="charts-container" class="charts-container">
+        <h2>Clima Statistics</h2>
+        <div></div>
+        @if (IsGlobeCollapsed)
+        {
             <div class="chart-item">
-                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Temperature" />
+                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Temperature"/>
             </div>
             <div class="chart-item">
-                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Humidity" />
+                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Humidity"/>
             </div>
             <div class="chart-item">
-                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Pressure" />
+                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Pressure"/>
             </div>
             <div class="chart-item">
-                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Co2Level" />
+                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Co2Level"/>
             </div>
-        </div>
-    }
+            <div class="ids">
+                <div>Org Id: @(OrgId) </div>
+                <div>Device Id: @(DeviceId)</div>
+            </div>
+        }
+    </div>
 </div>
 
 @code {
@@ -134,9 +139,9 @@
         if (_module != null)
         {
             var data = await FetchDeviceData(orgId, deviceId);
-
+            
+            if (!IsGlobeCollapsed) await _module.InvokeVoidAsync("resizeGlobe", 50);
             IsGlobeCollapsed = true;
-            await _module.InvokeVoidAsync("resizeGlobe", "50%");
 
             OrgId = orgId;
             DeviceId = deviceId;
@@ -147,15 +152,11 @@
         }
     }
 
-    private void ToggleGlobeSize()
-    {
-        IsGlobeCollapsed = !IsGlobeCollapsed;
-    }
-
     public void Dispose()
     {
         _timer?.Dispose();
         _module?.DisposeAsync();
         JS.InvokeVoidAsync("disposeEChartsGlobe");
     }
+
 }
