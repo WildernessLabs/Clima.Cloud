@@ -47,7 +47,6 @@
     private PeriodicTimer? _timer;
     private bool IsLoading { get; set; } = false;
     private bool IsGlobeCollapsed { get; set; } = false;
-    private bool IsAnimationComplete { get; set; } = false;
     private List<ClientEventMessage>? DeviceDataItems;
     private string? DeviceId;
     private string? OrgId;
@@ -151,12 +150,6 @@
 
             StateHasChanged();
         }
-    }
-
-    [JSInvokable]
-    public async Task AnimationComplete()
-    {
-        IsAnimationComplete = true;
     }
 
     public void Dispose()

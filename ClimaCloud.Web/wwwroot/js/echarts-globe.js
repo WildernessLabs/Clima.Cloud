@@ -146,7 +146,6 @@ export async function resizeGlobe(value) {
             globeContainer.style.width = value + '%';
             chartsContainer.style.width = value + '%';
             window.myChart.resize();
-            _dotNetHelper.invokeMethodAsync('AnimationComplete');
         }
     }
 
