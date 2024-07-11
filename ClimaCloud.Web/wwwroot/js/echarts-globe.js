@@ -1,4 +1,4 @@
-﻿const zIndexHeight = .01;
+﻿const zIndexHeight = 1;
 
 export async function initEChartsGlobe(dotNetHelper, data) {
     var chartDom = document.getElementById('globe-container');
@@ -16,7 +16,7 @@ export async function initEChartsGlobe(dotNetHelper, data) {
     myChart.setOption(option);
 
     myChart.on('click', function (params) {
-        if (params.seriesType === 'bar3D') {
+        if (params.seriesType === 'scatter3D') {
             dotNetHelper.invokeMethodAsync('OnChartClick', params.value[4], params.value[3], params.value[0], params.value[1]);
         }
     });
@@ -60,8 +60,7 @@ function processData(data) {
         dataItem.deviceId,
         dataItem.orgId
     ]);
-    data.push([0, 0, 0, 'fake', 'fake']);
-    data.push([0, 0, 1, 'fake', 'fake']);
+    data.push([0, 0, 999, 'fake', 'fake']);
     return data;
 }
 
@@ -94,7 +93,7 @@ function getChartOption(processedData) {
             }
         },
         series: [{
-            type: 'bar3D',
+            type: 'scatter3D',
             coordinateSystem: 'globe',
             data: processedData.map((dataItem, index) => {
                 const isLastPoint = index > processedData.length - 2;
@@ -108,7 +107,7 @@ function getChartOption(processedData) {
             }),
             minHeight: 0,
             silent: false,
-            barSize: 3,
+            symbolSize: 30,
         }]
     };
 }
