@@ -1,6 +1,7 @@
 ﻿import {echartsTheme} from "./config/echarts-theme.js";
-export async function renderEChart(elementId, dataJson, measurementProperty) {
-    const data = JSON.parse(dataJson);
+export async function renderEChart(elementId, dataJson, measurementProperty, unit) {
+    var data = JSON.parse(dataJson);
+    data = data.sort((a, b) => (new Date(a.x)) - (new Date(b.x)));
     echarts.registerTheme('wl-dark', echartsTheme);
     const container = document.getElementById(elementId);
     const chart = echarts.init(container, 'wl-dark');
@@ -24,29 +25,57 @@ export async function renderEChart(elementId, dataJson, measurementProperty) {
             }
         },
         grid: {
-            bottom: 80, // Increase bottom padding to accommodate rotated labels
-            left: 60 // Increase left padding for better spacing
+            bottom: 80,
+            left: 80
         },
         xAxis: {
-            type: 'category',
-            data: data.map(item => item.x),
+            type: "time",
+            boundaryGap: false,
             axisLabel: {
-                formatter: function (value) {
-                    return formatDate(new Date(value));
+                formatter: function (value, index) {
+                    const date = new Date(value);
+                    const day = date.getDate();
+                    const month = date.toLocaleString('default', { month: 'short' });
+                    if (day === 1) {
+                        return `${month}`;
+                    }  else if(day === 29) {
+                        return '';
+                    }else {
+                        return `${day}`;
+                    }
                 },
-                rotate: 45, // Rotate labels to avoid cutting off
-                padding: [10, 0, 0, 0], // Add padding to prevent cutoff
-                margin: 20 // Increase margin between labels and axis
+                align: 'right',
+            },
+            splitLine: {
+                show: false
             }
         },
         yAxis: {
-            type: 'value'
+            type: 'value',
+            name: unit,
+            nameLocation: 'middle', // You can place the label in the middle or at the end
+            nameTextStyle: {
+                fontSize: 16,
+                padding: 40 // This adds some space between the label and the axis
+            },
         },
         series: [{
             name: measurementProperty,
             data: data.map(item => [item.x, item.y]),
             type: 'line',
-        }]
+        }],
+        dataZoom: [
+            {
+                type: "slider",
+                start: 0,
+                end: 100,
+            },
+            {
+                type: "inside",
+                start: 0,
+                end: 100,
+            },
+        ],
     };
 
     chart.setOption(option);

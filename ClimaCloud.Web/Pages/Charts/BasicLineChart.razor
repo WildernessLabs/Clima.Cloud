@@ -2,7 +2,7 @@
 @using ClimaCloud.Shared.Messages
 @inject IJSRuntime JS
 
-<div id="@($"echart-{MeasurementProperty}")" style="width: 100%; height: 400px;"></div>
+<div id="@($"echart-{MeasurementProperty}")" style="width: 100%; height: 380px;"></div>
 
 @code {
     [Parameter]
@@ -10,6 +10,9 @@
 
     [Parameter]
     public string MeasurementProperty { get; set; }
+    
+    [Parameter]
+    public string Unit { get; set; }
     
     private bool IsImportComplete { get; set; } = false;
 
@@ -36,6 +39,6 @@
             IsImportComplete = true;
         }
         
-        if(module != null) await module.InvokeVoidAsync("renderEChart", $"echart-{MeasurementProperty}", json, MeasurementProperty);
+        if(module != null) await module.InvokeVoidAsync("renderEChart", $"echart-{MeasurementProperty}", json, MeasurementProperty, Unit);
     }
 }

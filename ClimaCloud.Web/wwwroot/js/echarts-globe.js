@@ -11,7 +11,6 @@ export async function initEChartsGlobe(dotNetHelper, data) {
     window.myChart = myChart;
 
     var processedData = processData(data);
-
     var option = getChartOption(processedData);
 
     myChart.setOption(option);
@@ -37,7 +36,7 @@ export async function updateEChartsData(data) {
                 return {
                     value: dataItem,
                     itemStyle: {
-                        color: getColorForDevice(dataItem[3]),
+                        color: 'red',
                         opacity: isLastPoint ? 0 : 1
                     },
                 };
@@ -71,7 +70,7 @@ function getChartOption(processedData) {
         tooltip: {
             show: true,
             trigger: 'item',
-            formatter: params => `Org ID: ${params.value[4]}<br />Device ID: ${params.value[3]}<br />
+            formatter: params => `Device ID: ${params.value[3]}<br />
                                   Coordinates: (${params.value[1]}, ${params.value[0]})`
         },
         globe: {
@@ -82,13 +81,14 @@ function getChartOption(processedData) {
                 roughness: 0.8,
                 metalness: 0
             },
-            // environment: '/asset/starfield.jpg',
+            environment: '/asset/starfield.jpg',
             light: {
                 main: { intensity: 3 }
             },
             viewControl: {
                 autoRotate: false,
-                distance: 200
+                distance: 200,
+                zoomSensitivity: 2
             }
         },
         series: [{
@@ -99,7 +99,7 @@ function getChartOption(processedData) {
                 return {
                     value: dataItem,
                     itemStyle: {
-                        color: "pink",
+                        color: "red",
                         opacity: isLastPoint ? 0 : 1
                     },
                 };
@@ -128,9 +128,10 @@ export async function setWidth(value) {
     window.myChart.setOption(window.myChart.getOption());
 }
 
-export async function resizeGlobe(value) {
+export async function shrinkGlobe(value) {
     var globeContainer = document.getElementById('globe-container');
     var chartsContainer = document.getElementById('charts-container');
+    chartsContainer.style.display = 'grid';
     function animate() {
         var globeWidth = parseFloat(globeContainer.style.width);
         var chartWidth = 100 - globeWidth;
@@ -150,7 +151,30 @@ export async function resizeGlobe(value) {
     }
 
     requestAnimationFrame(animate);
+}
+
+export async function collapseCharts() {
+    var globeContainer = document.getElementById('globe-container');
+    var chartsContainer = document.getElementById('charts-container');
     
-    // globeContainer.style.width = value;
-    // window.myChart.resize();
+    function animate() {
+        var globeWidth = parseFloat(globeContainer.style.width);
+        var chartWidth = 100 - globeWidth;
+
+        if (chartWidth > 1) {
+            globeWidth += (100 - globeWidth) / 3;
+            chartWidth = 100 - globeWidth;
+            globeContainer.style.width = globeWidth + '%';
+            chartsContainer.style.width = chartWidth + '%';
+            window.myChart.resize();
+            requestAnimationFrame(animate);
+        } else {
+            globeContainer.style.width = 100 + '%';
+            chartsContainer.style.width = 0 + '%';
+            window.myChart.resize();
+            chartsContainer.style.display = 'none';
+        }
+    }
+
+    requestAnimationFrame(animate);
 }
