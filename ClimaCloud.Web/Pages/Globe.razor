@@ -18,6 +18,11 @@
     </div>
 
     <div id="charts-container" class="charts-container">
+        <div>
+            <img @onclick="CollapseCharts" class="reverse collapse-charts" src="asset/nav-collapse.svg">
+        </div>
+        <div></div>
+
         <h2>Clima Statistics</h2>
         <div></div>
         @if (IsGlobeCollapsed)
@@ -35,7 +40,6 @@
                 <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Co2Level"/>
             </div>
             <div class="ids">
-                <div>Org Id: @(OrgId) </div>
                 <div>Device Id: @(DeviceId)</div>
             </div>
         }
@@ -105,7 +109,7 @@
             }
         }
     }
-
+    
     private async Task InitializeChart(List<ClientEventMessage> data)
     {
         _module = await JS.InvokeAsync<IJSObjectReference>("import", $"./js/echarts-globe.js?v={DateTime.Now.Ticks}");
@@ -132,6 +136,12 @@
             StateHasChanged();
         }
     }
+    
+    private async Task CollapseCharts()
+    {
+        if (IsGlobeCollapsed) await _module.InvokeVoidAsync("collapseCharts");
+        IsGlobeCollapsed = false;
+    }
 
     [JSInvokable]
     public async Task OnChartClick(string orgId, string deviceId, double longitude, double latitude)
@@ -139,8 +149,8 @@
         if (_module != null)
         {
             var data = await FetchDeviceData(orgId, deviceId);
-            
-            if (!IsGlobeCollapsed) await _module.InvokeVoidAsync("resizeGlobe", 50);
+
+            if (!IsGlobeCollapsed) await _module.InvokeVoidAsync("shrinkGlobe", 50);
             IsGlobeCollapsed = true;
 
             OrgId = orgId;

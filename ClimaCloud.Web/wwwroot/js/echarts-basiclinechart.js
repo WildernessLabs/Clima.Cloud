@@ -1,6 +1,7 @@
 ﻿import {echartsTheme} from "./config/echarts-theme.js";
 export async function renderEChart(elementId, dataJson, measurementProperty) {
-    const data = JSON.parse(dataJson);
+    var data = JSON.parse(dataJson);
+    data = data.sort((a, b) => (new Date(a.x)) - (new Date(b.x)));
     echarts.registerTheme('wl-dark', echartsTheme);
     const container = document.getElementById(elementId);
     const chart = echarts.init(container, 'wl-dark');
