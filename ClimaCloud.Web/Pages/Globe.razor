@@ -28,16 +28,16 @@
         @if (IsGlobeCollapsed)
         {
             <div class="chart-item">
-                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Temperature"/>
+                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Temperature" Unit="Celsius"/>
             </div>
             <div class="chart-item">
-                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Humidity"/>
+                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Humidity" Unit="Percent"/>
             </div>
             <div class="chart-item">
-                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Pressure"/>
+                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Pressure" Unit="Pascals"/>
             </div>
             <div class="chart-item">
-                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Co2Level"/>
+                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Co2Level" Unit="Parts per Million"/>
             </div>
             <div class="ids">
                 <div>Device Id: @(DeviceId)</div>

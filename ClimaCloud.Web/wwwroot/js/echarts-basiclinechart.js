@@ -1,5 +1,5 @@
 ﻿import {echartsTheme} from "./config/echarts-theme.js";
-export async function renderEChart(elementId, dataJson, measurementProperty) {
+export async function renderEChart(elementId, dataJson, measurementProperty, unit) {
     var data = JSON.parse(dataJson);
     data = data.sort((a, b) => (new Date(a.x)) - (new Date(b.x)));
     echarts.registerTheme('wl-dark', echartsTheme);
@@ -25,8 +25,8 @@ export async function renderEChart(elementId, dataJson, measurementProperty) {
             }
         },
         grid: {
-            bottom: 80, // Increase bottom padding to accommodate rotated labels
-            left: 60 // Increase left padding for better spacing
+            bottom: 80,
+            left: 80
         },
         xAxis: {
             type: "time",
@@ -36,7 +36,6 @@ export async function renderEChart(elementId, dataJson, measurementProperty) {
                     const date = new Date(value);
                     const day = date.getDate();
                     const month = date.toLocaleString('default', { month: 'short' });
-                    // Only display month name for the first day of the month
                     if (day === 1) {
                         return `${month}`;
                     }  else if(day === 29) {
@@ -48,11 +47,17 @@ export async function renderEChart(elementId, dataJson, measurementProperty) {
                 align: 'right',
             },
             splitLine: {
-                show: false // Optional: Hide the grid lines for a cleaner look
+                show: false
             }
         },
         yAxis: {
-            type: 'value'
+            type: 'value',
+            name: unit,
+            nameLocation: 'middle', // You can place the label in the middle or at the end
+            nameTextStyle: {
+                fontSize: 16,
+                padding: 40 // This adds some space between the label and the axis
+            },
         },
         series: [{
             name: measurementProperty,

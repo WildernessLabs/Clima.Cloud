@@ -11,6 +11,9 @@
     [Parameter]
     public string MeasurementProperty { get; set; }
     
+    [Parameter]
+    public string Unit { get; set; }
+    
     private bool IsImportComplete { get; set; } = false;
 
     protected override async Task OnParametersSetAsync()
@@ -36,6 +39,6 @@
             IsImportComplete = true;
         }
         
-        if(module != null) await module.InvokeVoidAsync("renderEChart", $"echart-{MeasurementProperty}", json, MeasurementProperty);
+        if(module != null) await module.InvokeVoidAsync("renderEChart", $"echart-{MeasurementProperty}", json, MeasurementProperty, Unit);
     }
 }

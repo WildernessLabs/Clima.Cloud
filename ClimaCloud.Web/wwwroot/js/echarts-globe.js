@@ -36,7 +36,7 @@ export async function updateEChartsData(data) {
                 return {
                     value: dataItem,
                     itemStyle: {
-                        color: getColorForDevice(dataItem[3]),
+                        color: 'red',
                         opacity: isLastPoint ? 0 : 1
                     },
                 };
@@ -99,7 +99,7 @@ function getChartOption(processedData) {
                 return {
                     value: dataItem,
                     itemStyle: {
-                        color: "pink",
+                        color: "red",
                         opacity: isLastPoint ? 0 : 1
                     },
                 };
