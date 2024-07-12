@@ -2,7 +2,7 @@
 @using ClimaCloud.Shared.Messages
 @inject IJSRuntime JS
 
-<div id="@($"echart-{MeasurementProperty}")" style="width: 100%; height: 400px;"></div>
+<div id="@($"echart-{MeasurementProperty}")" style="width: 100%; height: 380px;"></div>
 
 @code {
     [Parameter]
@@ -10,6 +10,11 @@
 
     [Parameter]
     public string MeasurementProperty { get; set; }
+    
+    [Parameter]
+    public string Unit { get; set; }
+    
+    private bool IsImportComplete { get; set; } = false;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -26,7 +31,14 @@
 
         var json = JsonSerializer.Serialize(data);
 
-        var module = await JS.InvokeAsync<IJSObjectReference>("import", $"./js/echarts-basiclinechart.js");
-        await module.InvokeVoidAsync("renderEChart", $"echart-{MeasurementProperty}", json, MeasurementProperty);
+        IJSObjectReference? module = null;
+        if (!IsImportComplete)
+        {
+            module = await JS.InvokeAsync<IJSObjectReference>("import", $"./js/config/echarts-theme.js?v={DateTime.Now.Ticks}");
+            module = await JS.InvokeAsync<IJSObjectReference>("import", $"./js/echarts-basiclinechart.js?v={DateTime.Now.Ticks}");
+            IsImportComplete = true;
+        }
+        
+        if(module != null) await module.InvokeVoidAsync("renderEChart", $"echart-{MeasurementProperty}", json, MeasurementProperty, Unit);
     }
 }

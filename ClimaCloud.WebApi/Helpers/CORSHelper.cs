@@ -9,6 +9,7 @@
             if (_endPointCache.Count() > 0) return _endPointCache;
 
             var endPoints = new List<string> {
+                "http://localhost:5118",
                 "https://localhost:7167",
                 "https://localhost:7272",
                 "https://localhost:7199",

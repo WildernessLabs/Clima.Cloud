@@ -8,33 +8,42 @@
 @implements IDisposable
 
 <div class="dashboard-container">
-    <div id="globe-container" class="globe-container @(IsGlobeCollapsed ? "globe-collapsed" : "globe-full-width")" style="width: 100%; height: 500px;">
+    <div id="globe-container" class="globe-container @(IsGlobeCollapsed ? "globe-collapsed" : "globe-full-width")" style="width: 100%; height: 100vh;">
         @if (IsLoading)
         {
             <div class="spinner-border text-primary" role="status" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
                 <span class="sr-only">Loading...</span>
             </div>
-        }     
+        }
     </div>
-    @if (!string.IsNullOrWhiteSpace(DeviceId) && !string.IsNullOrWhiteSpace(OrgId))
-    {
-        <div class="charts-container">
-            <h2>Org Id:</h2> @(OrgId)<br />
-            <h2>Device Id:</h2> @(DeviceId)<br />
-            <div class="chart-item">
-                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Temperature" />
-            </div>
-            <div class="chart-item">
-                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Humidity" />
-            </div>
-            <div class="chart-item">
-                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Pressure" />
-            </div>
-            <div class="chart-item">
-                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Co2Level" />
-            </div>
+
+    <div id="charts-container" class="charts-container">
+        <div>
+            <img @onclick="CollapseCharts" class="reverse collapse-charts" src="asset/nav-collapse.svg">
         </div>
-    }
+        <div></div>
+
+        <h2>Clima Statistics</h2>
+        <div></div>
+        @if (IsGlobeCollapsed)
+        {
+            <div class="chart-item">
+                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Temperature" Unit="Celsius"/>
+            </div>
+            <div class="chart-item">
+                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Humidity" Unit="Percent"/>
+            </div>
+            <div class="chart-item">
+                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Pressure" Unit="Atmospheres"/>
+            </div>
+            <div class="chart-item">
+                <BasicLineChart DataItems="DeviceDataItems" MeasurementProperty="Co2Level" Unit="Parts per Million"/>
+            </div>
+            <div class="ids">
+                <div>Device Id: @(DeviceId)</div>
+            </div>
+        }
+    </div>
 </div>
 
 @code {
@@ -100,7 +109,7 @@
             }
         }
     }
-
+    
     private async Task InitializeChart(List<ClientEventMessage> data)
     {
         _module = await JS.InvokeAsync<IJSObjectReference>("import", $"./js/echarts-globe.js?v={DateTime.Now.Ticks}");
@@ -127,6 +136,12 @@
             StateHasChanged();
         }
     }
+    
+    private async Task CollapseCharts()
+    {
+        if (IsGlobeCollapsed) await _module.InvokeVoidAsync("collapseCharts");
+        IsGlobeCollapsed = false;
+    }
 
     [JSInvokable]
     public async Task OnChartClick(string orgId, string deviceId, double longitude, double latitude)
@@ -135,8 +150,8 @@
         {
             var data = await FetchDeviceData(orgId, deviceId);
 
+            if (!IsGlobeCollapsed) await _module.InvokeVoidAsync("shrinkGlobe", 50);
             IsGlobeCollapsed = true;
-            await _module.InvokeVoidAsync("resizeGlobe", "50%");
 
             OrgId = orgId;
             DeviceId = deviceId;
@@ -147,15 +162,11 @@
         }
     }
 
-    private void ToggleGlobeSize()
-    {
-        IsGlobeCollapsed = !IsGlobeCollapsed;
-    }
-
     public void Dispose()
     {
         _timer?.Dispose();
         _module?.DisposeAsync();
         JS.InvokeVoidAsync("disposeEChartsGlobe");
     }
+
 }
