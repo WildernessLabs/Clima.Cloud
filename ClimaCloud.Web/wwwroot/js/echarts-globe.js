@@ -107,19 +107,7 @@ function getChartOption(processedData) {
             minHeight: 0,
             silent: false,
             symbolSize: 20,
-        }],
-        dataZoom: [
-            {
-                type: "slider",
-                start: 0,
-                end: 100,
-            },
-            {
-                type: "inside",
-                start: 0,
-                end: 100,
-            },
-        ],
+        }]
     };
 }
 
@@ -174,7 +162,6 @@ export async function collapseCharts() {
         var chartWidth = 100 - globeWidth;
 
         if (chartWidth > 1) {
-            console.log(globeWidth, chartWidth)
             globeWidth += (100 - globeWidth) / 3;
             chartWidth = 100 - globeWidth;
             globeContainer.style.width = globeWidth + '%';

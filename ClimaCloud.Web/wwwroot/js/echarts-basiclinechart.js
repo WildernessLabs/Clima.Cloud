@@ -29,15 +29,26 @@ export async function renderEChart(elementId, dataJson, measurementProperty) {
             left: 60 // Increase left padding for better spacing
         },
         xAxis: {
-            type: 'category',
-            data: data.map(item => item.x),
+            type: "time",
+            boundaryGap: false,
             axisLabel: {
-                formatter: function (value) {
-                    return formatDate(new Date(value));
+                formatter: function (value, index) {
+                    const date = new Date(value);
+                    const day = date.getDate();
+                    const month = date.toLocaleString('default', { month: 'short' });
+                    // Only display month name for the first day of the month
+                    if (day === 1) {
+                        return `${month}`;
+                    }  else if(day === 29) {
+                        return '';
+                    }else {
+                        return `${day}`;
+                    }
                 },
-                rotate: 45, // Rotate labels to avoid cutting off
-                padding: [10, 0, 0, 0], // Add padding to prevent cutoff
-                margin: 20 // Increase margin between labels and axis
+                align: 'right',
+            },
+            splitLine: {
+                show: false // Optional: Hide the grid lines for a cleaner look
             }
         },
         yAxis: {
@@ -47,7 +58,19 @@ export async function renderEChart(elementId, dataJson, measurementProperty) {
             name: measurementProperty,
             data: data.map(item => [item.x, item.y]),
             type: 'line',
-        }]
+        }],
+        dataZoom: [
+            {
+                type: "slider",
+                start: 0,
+                end: 100,
+            },
+            {
+                type: "inside",
+                start: 0,
+                end: 100,
+            },
+        ],
     };
 
     chart.setOption(option);
